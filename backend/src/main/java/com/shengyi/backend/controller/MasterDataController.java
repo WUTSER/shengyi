@@ -4,6 +4,7 @@ import com.shengyi.backend.common.ApiResponse;
 import com.shengyi.backend.model.Models.BusinessType;
 import com.shengyi.backend.model.Models.City;
 import com.shengyi.backend.model.Models.Employee;
+import com.shengyi.backend.model.Models.Project;
 import com.shengyi.backend.model.Models.ReimCompany;
 import com.shengyi.backend.model.Models.ReimDepartment;
 import com.shengyi.backend.service.MasterDataService;
@@ -47,5 +48,10 @@ public class MasterDataController {
     @GetMapping("/cities")
     public ApiResponse<List<City>> cities(@RequestParam(required = false) String keyword) {
         return ApiResponse.success(masterDataService.cities(keyword));
+    }
+
+    @GetMapping("/projects")
+    public ApiResponse<List<Project>> projects() {
+        return ApiResponse.success(masterDataService.projects());
     }
 }

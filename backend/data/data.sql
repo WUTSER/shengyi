@@ -61,3 +61,59 @@ INSERT INTO city (city_no, city_name, city_type) VALUES
 ON DUPLICATE KEY UPDATE
     city_name = VALUES(city_name),
     city_type = VALUES(city_type);
+
+INSERT INTO project (project_id, project_no, project_name) VALUES
+('12BC248B25083001', 'nonProjectRelated', '非项目类费用归集'),
+('1C811ABF96195000', 'centralChina', '华中客户定制化项目'),
+('1C5931735AC4A000', 'southChina', '华南客户定制化项目'),
+('1771EC45F2443000', 'northChina', '华北客户定制化项目'),
+('1762792DB4E9A002', 'eastChina', '华东客户定制化项目'),
+('17071065FC29A002', 'southWest', '西南客户定制化项目'),
+('162664EBE9ABE001', 'northWest', '西北客户定制化项目'),
+('162664B8526BE002', 'northEast', '东北客户定制化项目')
+ON DUPLICATE KEY UPDATE
+    project_no = VALUES(project_no),
+    project_name = VALUES(project_name);
+
+INSERT INTO travel_reimbursement (
+    reimbursement_id,
+    reimbursement_no,
+    bill_date,
+    status,
+    title,
+    reason,
+    reimburser_id,
+    reim_department_id,
+    reim_company_id,
+    business_type_id,
+    remark,
+    created_at,
+    updated_at
+) VALUES
+('RBX202605150001', 'RCBX20260515002', '2026-05-15', '1', '日常差旅报销单据-北京客户实施', '4.00CNY，武汉-北京，客户现场项目实施', '13AB3A3F72409002', '13AB8D7B52A9B002', '1C61686865DA8000', '1B5FEB7DD4396000', NULL, '2026-05-15 09:15:00', '2026-05-15 09:15:00'),
+('RBX202605130001', 'RCBX20260513014', '2026-05-13', '1', '日常差旅报销单据-上海拜访', '123.00CNY，武汉-上海，客户拜访', '13AB498CC6409002', '13AB8D7B52A9B002', '1C61686865DA8000', '1B5FEB7DD4396000', NULL, '2026-05-13 13:20:00', '2026-05-13 13:20:00'),
+('RBX202605130002', 'RCBX20260513013', '2026-05-13', '1', '日常差旅报销单据-杭州支持', '333.00CNY，武汉-杭州，售后支持', '13AB4A56BB009002', '13AB8D7B52A9B002', '1C61686865DA8000', '13AB3A4154008001', NULL, '2026-05-13 10:36:00', '2026-05-13 10:36:00'),
+('RBX202605120001', 'RCBX20260512003', '2026-05-12', '1', '日常差旅报销单据-北京会议', '3.00CNY，北京会议差旅', '13AB591FE8009002', '13AB8D7B52A9B002', '1C61686865DA8000', '1A92E43082EFC000', NULL, '2026-05-12 16:10:00', '2026-05-12 16:10:00'),
+('RBX202604290001', 'RCBX20260429076', '2026-04-29', '0', '测试', '测试', '13AB77281A408001', '13AB8D7B52A9B002', '1C61686865DA8000', '1B5FEB7DD4396000', NULL, '2026-04-29 17:30:00', '2026-04-29 17:30:00'),
+('RBX202604290002', 'RCBX20260429075', '2026-04-29', '0', '测试', '测试', '13AB7925EB808001', '13AB8D7B52A9B002', '1C61686865DA8000', '1B5FEB7DD4396000', NULL, '2026-04-29 16:42:00', '2026-04-29 16:42:00'),
+('RBX202604290003', 'RCBX20260429074', '2026-04-29', '0', '测试', '测试', '13AB3A3F72409002', '13AB8D7B52A9B002', '1C61686865DA8000', '1B5FEB7DD4396000', NULL, '2026-04-29 15:21:00', '2026-04-29 15:21:00'),
+('RBX202604290004', 'RCBX20260429073', '2026-04-29', '0', '这个法人公司的名字可能会有点长哦...', '客户陪侍', '13AB498CC6409002', '13AB8D7B52A9B002', '1C61686865DA8000', '13AB3A418F808001', NULL, '2026-04-29 14:18:00', '2026-04-29 14:18:00'),
+('RBX202604290005', 'RCBX20260429072', '2026-04-29', '1', '这个法人公司的名字可能会有点长哦...', '客户陪侍', '13AB4A56BB009002', '13AB8D7B52A9B002', '1C61686865DA8000', '13AB3A418F808001', NULL, '2026-04-29 13:05:00', '2026-04-29 13:05:00'),
+('RBX202604290006', 'RCBX20260429071', '2026-04-29', '2', '这个法人公司的名字可能会有点长哦...', '客户陪侍', '13AB591FE8009002', '13AB8D7B52A9B002', '1C61686865DA8000', '13AB3A418F808001', NULL, '2026-04-29 11:50:00', '2026-04-29 11:50:00')
+ON DUPLICATE KEY UPDATE
+    reimbursement_no = VALUES(reimbursement_no),
+    bill_date = VALUES(bill_date),
+    status = VALUES(status),
+    title = VALUES(title),
+    reason = VALUES(reason),
+    reimburser_id = VALUES(reimburser_id),
+    reim_department_id = VALUES(reim_department_id),
+    reim_company_id = VALUES(reim_company_id),
+    business_type_id = VALUES(business_type_id),
+    remark = VALUES(remark),
+    created_at = VALUES(created_at),
+    updated_at = VALUES(updated_at);
+
+UPDATE travel_reimbursement SET status = '0' WHERE status = 'DRAFT';
+UPDATE travel_reimbursement SET status = '1' WHERE status IN ('APPROVING', 'APPROVED', 'COMPLETED');
+UPDATE travel_reimbursement SET status = '2' WHERE status = 'VOIDED';

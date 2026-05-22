@@ -30,11 +30,17 @@ CREATE TABLE IF NOT EXISTS city (
     city_type CHAR(1) NOT NULL COMMENT '城市类型：1一线，2二线，3三线'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='城市';
 
+CREATE TABLE IF NOT EXISTS project (
+    project_id VARCHAR(64) PRIMARY KEY COMMENT '项目ID',
+    project_no VARCHAR(64) NOT NULL COMMENT '项目编号',
+    project_name VARCHAR(100) NOT NULL COMMENT '项目名称'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='项目';
+
 CREATE TABLE IF NOT EXISTS travel_reimbursement (
     reimbursement_id VARCHAR(64) PRIMARY KEY COMMENT '报销单ID',
     reimbursement_no VARCHAR(64) NOT NULL UNIQUE COMMENT '报销单号',
     bill_date DATE NOT NULL COMMENT '单据日期',
-    status VARCHAR(32) NOT NULL COMMENT '单据状态',
+    status VARCHAR(32) NOT NULL COMMENT '单据状态：0草稿，1已完成，2已作废',
     title VARCHAR(500) NOT NULL COMMENT '报销标题',
     reason VARCHAR(500) NOT NULL COMMENT '出差事由',
     reimburser_id VARCHAR(64) NOT NULL COMMENT '报销人ID',
@@ -72,6 +78,17 @@ CREATE TABLE IF NOT EXISTS travel_allowance (
     CONSTRAINT fk_allowance_reimbursement FOREIGN KEY (reimbursement_id) REFERENCES travel_reimbursement(reimbursement_id),
     CONSTRAINT fk_allowance_trip FOREIGN KEY (trip_id) REFERENCES travel_trip(trip_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='补助信息';
+
+CREATE TABLE IF NOT EXISTS expense_split (
+    split_id VARCHAR(64) PRIMARY KEY COMMENT '分摊ID',
+    reimbursement_id VARCHAR(64) NOT NULL COMMENT '报销单ID',
+    sequence_no INT NOT NULL COMMENT '序号',
+    reim_company_id VARCHAR(64) NOT NULL COMMENT '费用归属公司ID',
+    project_id VARCHAR(64) NULL COMMENT '项目ID',
+    ratio DECIMAL(8, 6) NOT NULL COMMENT '分摊比例，0-1',
+    amount DECIMAL(12, 2) NOT NULL COMMENT '分摊金额',
+    CONSTRAINT fk_split_reimbursement FOREIGN KEY (reimbursement_id) REFERENCES travel_reimbursement(reimbursement_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='费用归属及分摊';
 
 CREATE TABLE IF NOT EXISTS allowance_calendar (
     calendar_id VARCHAR(64) PRIMARY KEY COMMENT '补助日历ID',

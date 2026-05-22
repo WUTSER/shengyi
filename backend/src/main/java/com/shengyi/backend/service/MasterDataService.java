@@ -4,6 +4,7 @@ import com.shengyi.backend.common.BusinessException;
 import com.shengyi.backend.model.Models.BusinessType;
 import com.shengyi.backend.model.Models.City;
 import com.shengyi.backend.model.Models.Employee;
+import com.shengyi.backend.model.Models.Project;
 import com.shengyi.backend.model.Models.ReimCompany;
 import com.shengyi.backend.model.Models.ReimDepartment;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -46,6 +47,12 @@ public class MasterDataService {
             rs.getString("city_no"),
             rs.getString("city_name"),
             rs.getString("city_type")
+    );
+
+    private static final RowMapper<Project> PROJECT_ROW_MAPPER = (rs, rowNum) -> new Project(
+            rs.getString("project_id"),
+            rs.getString("project_no"),
+            rs.getString("project_name")
     );
 
     private final JdbcTemplate jdbcTemplate;
@@ -108,6 +115,25 @@ public class MasterDataService {
                 .filter(city -> city.cityName().toLowerCase(Locale.ROOT).contains(lowerKeyword)
                         || city.cityNo().toLowerCase(Locale.ROOT).contains(lowerKeyword))
                 .toList();
+    }
+
+    public List<Project> projects() {
+        return jdbcTemplate.query("""
+                SELECT project_id, project_no, project_name
+                FROM project
+                ORDER BY project_no
+                """, PROJECT_ROW_MAPPER);
+    }
+
+    public Project requireProject(String id) {
+        return jdbcTemplate.query("""
+                        SELECT project_id, project_no, project_name
+                        FROM project
+                        WHERE project_id = ?
+                        """, PROJECT_ROW_MAPPER, id)
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> BusinessException.validation("项目不存在"));
     }
 
     public ReimCompany requireCompany(String id) {

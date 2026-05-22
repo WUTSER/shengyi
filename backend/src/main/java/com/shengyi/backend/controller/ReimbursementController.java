@@ -17,7 +17,6 @@ import com.shengyi.backend.dto.Dtos.RemarkRequest;
 import com.shengyi.backend.dto.Dtos.TripRequest;
 import com.shengyi.backend.dto.Dtos.TripResponse;
 import com.shengyi.backend.dto.Dtos.VoidRequest;
-import com.shengyi.backend.model.ReimbursementStatus;
 import com.shengyi.backend.service.ReimbursementService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -51,7 +50,7 @@ public class ReimbursementController {
             @RequestParam(required = false) String reimDepartmentId,
             @RequestParam(required = false) String reimburserId,
             @RequestParam(required = false) String businessTypeId,
-            @RequestParam(required = false) ReimbursementStatus status,
+            @RequestParam(required = false) String status,
             @RequestParam(required = false) Integer pageNo,
             @RequestParam(required = false) Integer pageSize
     ) {

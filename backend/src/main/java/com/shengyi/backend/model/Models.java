@@ -32,6 +32,9 @@ public final class Models {
     public record City(String cityNo, String cityName, String cityType) {
     }
 
+    public record Project(String projectId, String projectNo, String projectName) {
+    }
+
     public static class TravelReimbursement {
         private String reimbursementId;
         private String reimbursementNo;
@@ -50,6 +53,7 @@ public final class Models {
         private String paymentNo;
         private final List<TravelTrip> trips = new ArrayList<>();
         private final List<TravelAllowance> allowances = new ArrayList<>();
+        private final List<ExpenseSplit> expenseSplits = new ArrayList<>();
 
         public String getReimbursementId() {
             return reimbursementId;
@@ -177,6 +181,76 @@ public final class Models {
 
         public List<TravelAllowance> getAllowances() {
             return allowances;
+        }
+
+        public List<ExpenseSplit> getExpenseSplits() {
+            return expenseSplits;
+        }
+    }
+
+    public static class ExpenseSplit {
+        private String splitId;
+        private String reimbursementId;
+        private int sequenceNo;
+        private String reimCompanyId;
+        private String projectId;
+        private BigDecimal ratio = BigDecimal.ZERO;
+        private BigDecimal amount = BigDecimal.ZERO;
+
+        public String getSplitId() {
+            return splitId;
+        }
+
+        public void setSplitId(String splitId) {
+            this.splitId = splitId;
+        }
+
+        public String getReimbursementId() {
+            return reimbursementId;
+        }
+
+        public void setReimbursementId(String reimbursementId) {
+            this.reimbursementId = reimbursementId;
+        }
+
+        public int getSequenceNo() {
+            return sequenceNo;
+        }
+
+        public void setSequenceNo(int sequenceNo) {
+            this.sequenceNo = sequenceNo;
+        }
+
+        public String getReimCompanyId() {
+            return reimCompanyId;
+        }
+
+        public void setReimCompanyId(String reimCompanyId) {
+            this.reimCompanyId = reimCompanyId;
+        }
+
+        public String getProjectId() {
+            return projectId;
+        }
+
+        public void setProjectId(String projectId) {
+            this.projectId = projectId;
+        }
+
+        public BigDecimal getRatio() {
+            return ratio;
+        }
+
+        public void setRatio(BigDecimal ratio) {
+            this.ratio = ratio;
+        }
+
+        public BigDecimal getAmount() {
+            return amount;
+        }
+
+        public void setAmount(BigDecimal amount) {
+            this.amount = amount;
         }
     }
 

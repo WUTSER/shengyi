@@ -2,6 +2,8 @@ package com.shengyi.backend.dto;
 
 import com.shengyi.backend.model.ReimbursementStatus;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -24,7 +26,7 @@ public final class Dtos {
             String reimDepartmentId,
             String reimburserId,
             String businessTypeId,
-            ReimbursementStatus status,
+            String status,
             Integer pageNo,
             Integer pageSize
     ) {
@@ -55,7 +57,23 @@ public final class Dtos {
             String businessTypeId,
 
             @Size(max = 1000, message = "备注不能超过1000字")
-            String remark
+            String remark,
+
+            @Valid
+            List<ExpenseSplitSaveRequest> splits
+    ) {
+    }
+
+    public record ExpenseSplitSaveRequest(
+            @NotBlank(message = "费用归属不能为空")
+            String reimCompanyId,
+
+            String projectId,
+
+            @NotNull(message = "分摊比例不能为空")
+            @DecimalMin(value = "0.0000", message = "分摊比例不能小于0")
+            @DecimalMax(value = "1.0000", message = "分摊比例不能大于1")
+            BigDecimal ratio
     ) {
     }
 
@@ -71,6 +89,7 @@ public final class Dtos {
             String reimbursementNo,
             ReimbursementStatus status,
             String statusName,
+            String billTypeName,
             String reimburserId,
             String reimburserNo,
             String reimburserName,
@@ -93,8 +112,22 @@ public final class Dtos {
             ReimbursementHeader header,
             List<TripResponse> trips,
             List<AllowanceResponse> allowances,
+            List<ExpenseSplitResponse> splits,
             ExpenseTotalsResponse totals,
             List<String> availableActions
+    ) {
+    }
+
+    public record ExpenseSplitResponse(
+            String splitId,
+            String reimbursementId,
+            int sequenceNo,
+            String reimCompanyId,
+            String reimCompanyName,
+            String projectId,
+            String projectName,
+            BigDecimal ratio,
+            BigDecimal amount
     ) {
     }
 

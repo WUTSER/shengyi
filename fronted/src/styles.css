@@ -174,14 +174,23 @@ button {
   margin: 0 auto 16px;
 }
 
-.filter-bar label,
-.basic-grid label {
+.filter-bar label {
   display: grid;
   grid-template-columns: 86px minmax(0, 1fr);
   align-items: center;
   gap: 8px;
   color: #606f82;
   font-size: 12px;
+  white-space: nowrap;
+}
+
+.basic-grid label {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  color: #606f82;
+  font-size: 14px;
   white-space: nowrap;
 }
 
@@ -259,14 +268,23 @@ button {
 }
 
 .data-table th,
-.data-table td,
+.data-table td {
+  height: 34px;
+  border-bottom: 1px solid #edf1f6;
+  padding: 0 8px;
+  color: #3d4d63;
+  font-size: 12px;
+  text-align: left;
+  vertical-align: middle;
+}
+
 .section-table th,
 .section-table td {
   height: 34px;
   border-bottom: 1px solid #edf1f6;
   padding: 0 8px;
   color: #3d4d63;
-  font-size: 12px;
+  font-size: 14px;
   text-align: left;
   vertical-align: middle;
 }
@@ -685,7 +703,7 @@ button {
   border: 0;
   color: #1677ff;
   background: transparent;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .required {
@@ -937,7 +955,7 @@ select:disabled {
   align-items: center;
   padding: 0 14px;
   color: #34445b;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .allowance-type-row b {
@@ -982,7 +1000,7 @@ select:disabled {
   grid-template-columns: 62px 1fr;
   align-items: center;
   color: #637184;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .trip-date-row b {
@@ -1041,7 +1059,7 @@ select:disabled {
   align-items: center;
   min-height: 34px;
   color: #59687c;
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .amount-card em {
@@ -1098,7 +1116,7 @@ select:disabled {
   border-right: 1px solid #edf1f6;
   border-bottom: 1px solid #edf1f6;
   color: #3f4f65;
-  font-size: 12px;
+  font-size: 14px;
   text-align: center;
   vertical-align: middle;
 }

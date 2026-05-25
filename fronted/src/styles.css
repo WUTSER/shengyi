@@ -339,6 +339,34 @@ button {
   color: #1677ff;
 }
 
+.status-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.status-tag.status-0 {
+  color: #8c8c8c;
+  background: #f5f5f5;
+}
+
+.status-tag.status-1 {
+  color: #1677ff;
+  background: #e6f4ff;
+}
+
+.status-tag.status-2 {
+  color: #52c41a;
+  background: #f6ffed;
+}
+
+.status-tag.status-3 {
+  color: #ff4d4f;
+  background: #fff2f0;
+}
+
 .row-menu {
   position: absolute;
   top: 22px;

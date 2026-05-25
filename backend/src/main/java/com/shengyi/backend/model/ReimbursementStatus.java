@@ -4,8 +4,9 @@ import com.fasterxml.jackson.annotation.JsonValue;
 
 public enum ReimbursementStatus {
     DRAFT("0", "草稿"),
-    COMPLETED("1", "已完成"),
-    VOIDED("2", "已作废");
+    APPROVING("1", "审批中"),
+    COMPLETED("2", "已完成"),
+    VOIDED("3", "已作废");
 
     private final String code;
     private final String text;
@@ -30,8 +31,9 @@ public enum ReimbursementStatus {
         }
         return switch (value) {
             case "0", "DRAFT" -> DRAFT;
-            case "1", "COMPLETED", "APPROVING", "APPROVED" -> COMPLETED;
-            case "2", "VOIDED" -> VOIDED;
+            case "1", "APPROVING" -> APPROVING;
+            case "2", "COMPLETED", "APPROVED" -> COMPLETED;
+            case "3", "VOIDED" -> VOIDED;
             default -> throw new IllegalArgumentException("Unknown reimbursement status: " + value);
         };
     }

@@ -219,9 +219,9 @@ public class ReimbursementService {
 
     public synchronized ReimbursementDetailResponse submit(String reimbursementId) {
         TravelReimbursement reimbursement = requireReimbursement(reimbursementId);
-        requireStatus(reimbursement, ReimbursementStatus.DRAFT, "仅未提交状态允许提交");
+        requireStatus(reimbursement, ReimbursementStatus.DRAFT, "仅草稿状态允许提交");
         validateBeforeSubmit(reimbursement);
-        reimbursement.setStatus(ReimbursementStatus.COMPLETED);
+        reimbursement.setStatus(ReimbursementStatus.APPROVING);
         reimbursement.setUpdatedAt(LocalDateTime.now());
         updateReimbursement(reimbursement);
         return toDetail(reimbursement);
@@ -229,7 +229,7 @@ public class ReimbursementService {
 
     public synchronized ReimbursementDetailResponse withdraw(String reimbursementId) {
         TravelReimbursement reimbursement = requireReimbursement(reimbursementId);
-        requireStatus(reimbursement, ReimbursementStatus.COMPLETED, "仅已完成状态允许撤回");
+        requireStatus(reimbursement, ReimbursementStatus.APPROVING, "仅审批中状态允许撤回");
         reimbursement.setStatus(ReimbursementStatus.DRAFT);
         reimbursement.setUpdatedAt(LocalDateTime.now());
         updateReimbursement(reimbursement);
@@ -249,7 +249,7 @@ public class ReimbursementService {
 
     public synchronized ReimbursementDetailResponse approve(String reimbursementId) {
         TravelReimbursement reimbursement = requireReimbursement(reimbursementId);
-        requireStatus(reimbursement, ReimbursementStatus.DRAFT, "仅草稿状态允许提交");
+        requireStatus(reimbursement, ReimbursementStatus.APPROVING, "仅审批中状态允许审批");
         reimbursement.setStatus(ReimbursementStatus.COMPLETED);
         reimbursement.setUpdatedAt(LocalDateTime.now());
         updateReimbursement(reimbursement);
@@ -1188,7 +1188,7 @@ public class ReimbursementService {
     }
 
     private void requireDraft(TravelReimbursement reimbursement) {
-        requireStatus(reimbursement, ReimbursementStatus.DRAFT, "仅未提交状态允许编辑");
+        requireStatus(reimbursement, ReimbursementStatus.DRAFT, "仅草稿状态允许编辑");
     }
 
     private void requireStatus(TravelReimbursement reimbursement, ReimbursementStatus status, String message) {
@@ -1220,6 +1220,7 @@ public class ReimbursementService {
     private List<String> availableActions(ReimbursementStatus status) {
         return switch (status) {
             case DRAFT -> List.of("EDIT", "DELETE", "SUBMIT", "VOID");
+            case APPROVING -> List.of("WITHDRAW", "APPROVE", "VOID");
             case COMPLETED -> List.of("VOID");
             case VOIDED -> List.of();
         };

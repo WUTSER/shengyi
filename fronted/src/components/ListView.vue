@@ -49,6 +49,15 @@
           </option>
         </select>
       </label>
+      <label>
+        <span>单据状态</span>
+        <select v-model="filters.status">
+          <option value="">请选择</option>
+          <option v-for="(text, code) in STATUS_MAP" :key="code" :value="code">
+            {{ text }}
+          </option>
+        </select>
+      </label>
       <div class="filter-actions">
         <button class="btn ghost" type="button" @click="newBill">新增</button>
         <button class="btn ghost" type="button" @click="resetFilters">清除</button>
@@ -96,7 +105,7 @@
               </div>
             </td>
             <td><button class="link" @click="viewDetail(row)">{{ row.reimbursementNo }}</button></td>
-            <td><span class="status-link">{{ row.statusName }}</span></td>
+            <td><span class="status-tag" :class="'status-' + row.status">{{ row.statusName }}</span></td>
             <td>{{ row.billTypeName }}</td>
             <td>{{ row.reimburserName }}[{{ row.reimburserNo }}]</td>
             <td>[{{ row.reimDepartmentNo }}]{{ row.reimDepartmentName }}</td>
@@ -158,7 +167,7 @@ import {
   Trash2
 } from 'lucide-vue-next'
 import { formatDate, formatMoney } from '../utils/formatters'
-import { canEditReimbursement } from '../utils/reimbursement'
+import { canEditReimbursement, STATUS_MAP } from '../utils/reimbursement'
 import { useMasterData } from '../stores/masterData'
 import { useFeedback } from '../composables/useFeedback'
 import { deleteReimbursement, listReimbursements, submitReimbursement } from '../api/travelReimbursements'
@@ -178,7 +187,8 @@ const filters = reactive({
   reimCompanyId: '',
   reimDepartmentId: '',
   reimburserId: '',
-  businessTypeId: ''
+  businessTypeId: '',
+  status: ''
 })
 
 const pageSizes = [10, 20, 50]
@@ -309,13 +319,13 @@ async function deleteBill(row) {
 }
 
 async function manualPush(row) {
-  if (!(await confirmDialog('确认手工推送该报销单并转为已完成状态？'))) {
+  if (!(await confirmDialog('确认手工推送该报销单并提交审批？'))) {
     moreMenuOpen.value = null
     return
   }
   try {
     await submitReimbursement(row.reimbursementId)
-    showToast(`报销单 ${row.reimbursementNo} 已转为已完成状态`, 'success')
+    showToast(`报销单 ${row.reimbursementNo} 已提交审批`, 'success')
     await loadList()
   } catch (error) {
     showToast(`手工推送失败：${error.message}`, 'error')

@@ -42,3 +42,10 @@ export function createEmptyBill() {
     availableActions: ['EDIT', 'DELETE', 'SUBMIT', 'VOID']
   }
 }
+
+export const STATUS_MAP = {
+  '0': '草稿',
+  '1': '审批中',
+  '2': '已完成',
+  '3': '已作废'
+}

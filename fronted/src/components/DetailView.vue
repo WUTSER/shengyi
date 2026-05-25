@@ -165,6 +165,7 @@
       <button class="btn ghost" @click="returnToList">关闭</button>
       <button v-if="!isReadonly" class="btn ghost" @click="saveBill">保存</button>
       <button v-if="!isReadonly" class="btn primary" @click="submitBill">提交</button>
+      <button v-if="isApproving" class="btn ghost" @click="withdrawBill">撤回</button>
     </footer>
 
     <div v-if="tripModal.visible" class="modal-mask">
@@ -440,6 +441,7 @@ import {
   createTrip,
   deleteTrip as deleteTripApi,
   submitReimbursement,
+  withdrawReimbursement,
   updateReimbursement,
   updateTrip,
   getReimbursement
@@ -495,12 +497,10 @@ const headerBusinessTypeName = computed(() => {
   return businessType?.businessTypeName || headerForm.businessTypeName || '-'
 })
 const isDraft = computed(() => headerForm.status === '0' || headerForm.status === 0 || !headerForm.reimbursementId)
+const isApproving = computed(() => headerForm.status === '1' || headerForm.status === 1)
 const isReadonly = computed(() => {
-  // 如果是查看模式，始终只读
   if (props.mode === 'view') return true
-  // 如果是编辑模式且是草稿，可编辑
   if (props.mode === 'edit' && isDraft.value) return false
-  // 默认根据状态判断
   return !isDraft.value
 })
 
@@ -634,6 +634,19 @@ async function submitBill() {
     await submitReimbursement(reimbursementId)
     showToast('提交成功', 'success')
     router.push({ name: 'reimbursement-list' })
+  } catch (error) {
+    showToast(error.message, 'error')
+  }
+}
+
+async function withdrawBill() {
+  try {
+    if (!(await confirmDialog('确认撤回该报销单？撤回后将恢复为草稿状态'))) {
+      return
+    }
+    await withdrawReimbursement(headerForm.reimbursementId)
+    showToast('撤回成功', 'success')
+    await loadDetail(headerForm.reimbursementId)
   } catch (error) {
     showToast(error.message, 'error')
   }

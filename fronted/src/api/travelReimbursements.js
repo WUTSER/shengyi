@@ -30,6 +30,14 @@ export function submitReimbursement(reimbursementId) {
   return request(`/travel-reimbursements/${reimbursementId}/submit`, { method: 'POST' })
 }
 
+export function withdrawReimbursement(reimbursementId) {
+  return request(`/travel-reimbursements/${reimbursementId}/withdraw`, { method: 'POST' })
+}
+
+export function approveReimbursement(reimbursementId) {
+  return request(`/travel-reimbursements/${reimbursementId}/approve`, { method: 'POST' })
+}
+
 export function createTrip(reimbursementId, payload) {
   return request(`/travel-reimbursements/${reimbursementId}/trips`, {
     method: 'POST',

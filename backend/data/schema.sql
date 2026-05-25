@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS travel_reimbursement (
     reimbursement_id VARCHAR(64) PRIMARY KEY COMMENT '报销单ID',
     reimbursement_no VARCHAR(64) NOT NULL UNIQUE COMMENT '报销单号',
     bill_date DATE NOT NULL COMMENT '单据日期',
-    status VARCHAR(32) NOT NULL COMMENT '单据状态：0草稿，1已完成，2已作废',
+    status VARCHAR(32) NOT NULL COMMENT '单据状态：0草稿，1审批中，2已完成，3已作废',
     title VARCHAR(500) NOT NULL COMMENT '报销标题',
     reason VARCHAR(500) NOT NULL COMMENT '出差事由',
     reimburser_id VARCHAR(64) NOT NULL COMMENT '报销人ID',

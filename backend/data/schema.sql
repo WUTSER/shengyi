@@ -106,3 +106,22 @@ CREATE TABLE IF NOT EXISTS allowance_calendar (
     communication_amount DECIMAL(12, 2) NOT NULL COMMENT '通讯补助金额',
     CONSTRAINT fk_calendar_allowance FOREIGN KEY (allowance_id) REFERENCES travel_allowance(allowance_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='补助日历';
+
+CREATE INDEX idx_reim_reimburser_id ON travel_reimbursement(reimburser_id);
+CREATE INDEX idx_reim_reim_department_id ON travel_reimbursement(reim_department_id);
+CREATE INDEX idx_reim_reim_company_id ON travel_reimbursement(reim_company_id);
+CREATE INDEX idx_reim_business_type_id ON travel_reimbursement(business_type_id);
+CREATE INDEX idx_reim_status ON travel_reimbursement(status);
+CREATE INDEX idx_reim_created_at ON travel_reimbursement(created_at);
+CREATE INDEX idx_reim_status_created_at ON travel_reimbursement(status, created_at);
+
+CREATE INDEX idx_trip_reimbursement_id ON travel_trip(reimbursement_id);
+
+CREATE INDEX idx_allowance_reimbursement_id ON travel_allowance(reimbursement_id);
+CREATE INDEX idx_allowance_trip_id ON travel_allowance(trip_id);
+
+CREATE INDEX idx_split_reimbursement_id ON expense_split(reimbursement_id);
+
+CREATE INDEX idx_calendar_allowance_id ON allowance_calendar(allowance_id);
+
+CREATE INDEX idx_business_type_superior_id ON business_type(superior_id);

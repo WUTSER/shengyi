@@ -170,7 +170,7 @@ button {
   grid-template-columns: 1fr 1fr 1fr 1fr;
   gap: 12px 38px;
   align-items: end;
-  max-width: 1320px;
+  max-width: 1250px;
   margin: 0 auto 16px;
 }
 

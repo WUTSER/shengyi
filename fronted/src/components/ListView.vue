@@ -49,7 +49,7 @@
           </option>
         </select>
       </label>
-      <label>
+      <!-- <label>
         <span>单据状态</span>
         <select v-model="filters.status">
           <option value="">请选择</option>
@@ -57,7 +57,7 @@
             {{ text }}
           </option>
         </select>
-      </label>
+      </label> -->
       <div class="filter-actions">
         <button class="btn ghost" type="button" @click="newBill">新增</button>
         <button class="btn ghost" type="button" @click="resetFilters">清除</button>

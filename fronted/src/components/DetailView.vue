@@ -162,7 +162,7 @@
     </div>
 
     <footer class="detail-footer">
-      <button class="btn ghost" @click="$emit('back')">关闭</button>
+      <button class="btn ghost" @click="returnToList">关闭</button>
       <button v-if="!isReadonly" class="btn ghost" @click="saveBill">保存</button>
       <button v-if="!isReadonly" class="btn primary" @click="submitBill">提交</button>
     </footer>
@@ -295,7 +295,8 @@
 
           <section class="calendar-panel">
             <div class="calendar-title">出差补助</div>
-            <div v-if="calendarLoading" class="calendar-state">加载中...</div>
+            <div v-if="loading" class="calendar-state">加载中...</div>
+            <div v-else-if="calendarLoading" class="calendar-state">加载中...</div>
             <div v-else-if="calendarError" class="calendar-state error">{{ calendarError }}</div>
             <div v-else class="calendar-scroll">
               <table class="calendar-table">
@@ -431,7 +432,8 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { Copy, Info, MapPin, Pencil, Trash2, X } from 'lucide-vue-next'
 import {
   createReimbursement,
@@ -439,26 +441,30 @@ import {
   deleteTrip as deleteTripApi,
   submitReimbursement,
   updateReimbursement,
-  updateTrip
+  updateTrip,
+  getReimbursement
 } from '../api/travelReimbursements'
 import { useAllowanceCalendar } from '../composables/useAllowanceCalendar'
 import { useExpenseSplit } from '../composables/useExpenseSplit'
 import { formatMoney, formatRange } from '../utils/formatters'
-import { createEmptyHeader } from '../utils/reimbursement'
+import { createEmptyBill, createEmptyHeader } from '../utils/reimbursement'
 import ExpenseSplitSection from './detail/ExpenseSplitSection.vue'
 import ExpenseTotalsSection from './detail/ExpenseTotalsSection.vue'
 import SectionPanel from './SectionPanel.vue'
+import { useMasterData } from '../stores/masterData'
+import { useFeedback } from '../composables/useFeedback'
 
 const props = defineProps({
-  bill: { type: Object, required: true },
-  options: { type: Object, required: true },
-  mode: { type: String, default: 'view' },
-  notify: { type: Function, default: () => {} },
-  confirmAction: { type: Function, default: async () => true }
+  mode: { type: String, default: 'edit' }
 })
 
-const emit = defineEmits(['back', 'submitted', 'changed'])
+const router = useRouter()
+const route = useRoute()
+const { options } = useMasterData()
+const { showToast, confirmDialog } = useFeedback()
 
+const loading = ref(false)
+const bill = ref(createEmptyBill())
 const headerForm = reactive(createEmptyHeader())
 const tripModal = reactive({ visible: false, mode: 'create', tripId: '' })
 const tripForm = reactive({
@@ -473,23 +479,30 @@ const formError = ref('')
 const saving = ref(false)
 const today = new Date().toISOString().slice(0, 10)
 
-const trips = computed(() => props.bill.trips || [])
-const allowances = computed(() => props.bill.allowances || [])
-const savedSplits = computed(() => props.bill.splits || [])
-const totals = computed(() => props.bill.totals || {})
+const trips = computed(() => bill.value.trips || [])
+const allowances = computed(() => bill.value.allowances || [])
+const savedSplits = computed(() => bill.value.splits || [])
+const totals = computed(() => bill.value.totals || {})
 const leafBusinessTypes = computed(() =>
-  (props.options.businessTypes || []).filter((item) => !item.thereSubordinateNode || item.thereSubordinateNode === '0')
+  (options.businessTypes || []).filter((item) => !item.thereSubordinateNode || item.thereSubordinateNode === '0')
 )
 const allowanceSubtitle = computed(() => {
   const days = allowances.value.reduce((sum, item) => sum + Number(item.allowanceDays || 0), 0)
   return `${formatMoney(totals.value.totalAllowanceAmount)}（${days}天）`
 })
 const headerBusinessTypeName = computed(() => {
-  const businessType = props.options.businessTypes.find((item) => item.businessTypeId === headerForm.businessTypeId)
+  const businessType = options.businessTypes.find((item) => item.businessTypeId === headerForm.businessTypeId)
   return businessType?.businessTypeName || headerForm.businessTypeName || '-'
 })
 const isDraft = computed(() => headerForm.status === '0' || headerForm.status === 0 || !headerForm.reimbursementId)
-const isReadonly = computed(() => props.mode === 'view' || !isDraft.value)
+const isReadonly = computed(() => {
+  // 如果是查看模式，始终只读
+  if (props.mode === 'view') return true
+  // 如果是编辑模式且是草稿，可编辑
+  if (props.mode === 'edit' && isDraft.value) return false
+  // 默认根据状态判断
+  return !isDraft.value
+})
 
 const {
   splitRows,
@@ -504,7 +517,7 @@ const {
   splitAmount,
   validateSplitRows,
   toSaveSplits
-} = useExpenseSplit(headerForm, totals, savedSplits, isReadonly, props.notify, props.confirmAction)
+} = useExpenseSplit(headerForm, totals, savedSplits, isReadonly, showToast, confirmDialog)
 
 const {
   allowanceModal,
@@ -529,15 +542,26 @@ const {
   toggleColumn,
   normalizeItem,
   clampItem
-} = useAllowanceCalendar(headerForm, trips, isReadonly, emit)
+} = useAllowanceCalendar(headerForm, trips, isReadonly, { emit: () => {} })
 
 watch(
-  () => props.bill.header,
+  () => bill.value.header,
   (header) => {
     Object.assign(headerForm, createEmptyHeader(), header || {})
   },
   { immediate: true }
 )
+
+async function loadDetail(reimbursementId) {
+  loading.value = true
+  try {
+    bill.value = await getReimbursement(reimbursementId)
+  } catch (error) {
+    showToast(`加载详情失败：${error.message}`, 'error')
+  } finally {
+    loading.value = false
+  }
+}
 
 function openTripModal(mode, trip = null) {
   tripModal.visible = true
@@ -563,10 +587,10 @@ function closeTripModal() {
 async function saveBill() {
   try {
     const reimbursementId = await ensureBillSaved()
-    props.notify('保存成功', 'success')
-    emit('changed', reimbursementId)
+    showToast('保存成功', 'success')
+    await loadDetail(reimbursementId)
   } catch (error) {
-    props.notify(error.message, 'error')
+    showToast(error.message, 'error')
   }
 }
 
@@ -586,7 +610,7 @@ async function saveTrip() {
       await createTrip(reimbursementId, { ...tripForm })
     }
     closeTripModal()
-    emit('changed', reimbursementId)
+    await loadDetail(reimbursementId)
   } catch (error) {
     formError.value = error.message
   } finally {
@@ -595,11 +619,11 @@ async function saveTrip() {
 }
 
 async function deleteTrip(trip) {
-  if (!(await props.confirmAction('确定删除当前补录行程吗？删除后将同步删除关联补助信息和补助日历。'))) {
+  if (!(await confirmDialog('确定删除当前补录行程吗？删除后将同步删除关联补助信息和补助日历。'))) {
     return
   }
   await deleteTripApi(headerForm.reimbursementId, trip.tripId)
-  emit('changed', headerForm.reimbursementId)
+  await loadDetail(headerForm.reimbursementId)
 }
 
 async function submitBill() {
@@ -608,10 +632,10 @@ async function submitBill() {
     validateSplitRows()
     const reimbursementId = await ensureBillSaved()
     await submitReimbursement(reimbursementId)
-    props.notify('提交成功', 'success')
-    emit('submitted')
+    showToast('提交成功', 'success')
+    router.push({ name: 'reimbursement-list' })
   } catch (error) {
-    props.notify(error.message, 'error')
+    showToast(error.message, 'error')
   }
 }
 
@@ -672,4 +696,14 @@ function validateTripForm() {
 function rangesOverlap(startA, endA, startB, endB) {
   return endA >= startB && endB >= startA
 }
+
+function returnToList() {
+  router.push({ name: 'reimbursement-list' })
+}
+
+onMounted(async () => {
+  if (route.name === 'reimbursement-detail' && route.params.id) {
+    await loadDetail(route.params.id)
+  }
+})
 </script>

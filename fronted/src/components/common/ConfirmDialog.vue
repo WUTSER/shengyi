@@ -6,7 +6,7 @@
         <button type="button" title="关闭" @click="$emit('close', false)">×</button>
       </header>
       <div class="confirm-body">
-        <span class="confirm-icon">!</span>
+        <span class="confirm-icon">⚠</span>
         <p>{{ state.message }}</p>
       </div>
       <footer class="confirm-footer">

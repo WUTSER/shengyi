@@ -1,9 +1,9 @@
 import { reactive } from 'vue'
 
-export function useFeedback() {
-  const toast = reactive({ visible: false, message: '', type: 'warning', timer: 0 })
-  const confirmState = reactive({ visible: false, title: '提示', message: '', resolve: null })
+const toast = reactive({ visible: false, message: '', type: 'warning', timer: 0 })
+const confirmState = reactive({ visible: false, title: '提示', message: '', resolve: null })
 
+export function useFeedback() {
   function showToast(message, type = 'warning') {
     window.clearTimeout(toast.timer)
     toast.message = message

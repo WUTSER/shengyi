@@ -12,7 +12,7 @@
 
 body {
   margin: 0;
-  min-width: 1180px;
+  min-width: 100%;
 }
 
 button,
@@ -246,7 +246,7 @@ button {
 }
 
 .table-wrap {
-  overflow-x: auto;
+  overflow-x: hidden;
   border: 1px solid #edf1f6;
   max-width: 100%;
 }
@@ -255,7 +255,7 @@ button {
 .section-table {
   width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;
+  table-layout: auto;
 }
 
 .data-table th,
@@ -271,31 +271,23 @@ button {
   vertical-align: middle;
 }
 
-.data-table th,
-.data-table td {
-  height: 32px;
+.data-table th {
+  background: #f7f9fc;
+  color: #40516a;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
-.data-table th,
+.data-table td {
+  height: 32px;
+  white-space: nowrap;
+}
+
 .section-table th {
   background: #f7f9fc;
   color: #40516a;
   font-weight: 600;
 }
-
-.data-table th:nth-child(1) { width: 42px; }
-.data-table th:nth-child(2) { width: 88px; }
-.data-table th:nth-child(3) { width: 150px; }
-.data-table th:nth-child(4) { width: 92px; }
-.data-table th:nth-child(5) { width: 104px; }
-.data-table th:nth-child(6) { width: 145px; }
-.data-table th:nth-child(7) { width: 150px; }
-.data-table th:nth-child(8) { width: 150px; }
-.data-table th:nth-child(9) { width: 110px; }
-.data-table th:nth-child(10) { width: 190px; }
-.data-table th:nth-child(11) { width: 210px; }
-.data-table th:nth-child(12) { width: 110px; }
-.data-table th:nth-child(13) { width: 120px; }
 
 .index-col {
   text-align: center !important;
@@ -380,10 +372,63 @@ button {
   background: transparent;
 }
 
+.more-actions {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+}
+
+.more-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 0;
+  color: #4090f7;
+  background: transparent;
+}
+
+.more-menu {
+  position: absolute;
+  top: 22px;
+  right: 0;
+  z-index: 12;
+  display: flex;
+  flex-direction: column;
+  min-width: 92px;
+  padding: 4px;
+  border: 1px solid #dfe5ee;
+  border-radius: 4px;
+  background: #fff;
+  box-shadow: 0 8px 22px rgb(15 23 42 / 14%);
+}
+
+.more-menu button {
+  width: 100%;
+  height: 28px;
+  border: 0;
+  border-radius: 3px;
+  color: #26364d;
+  background: transparent;
+  text-align: left;
+  padding: 0 8px;
+}
+
+.more-menu button:hover {
+  background: #f3f7fd;
+}
+
 .ellipsis {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.data-table .ellipsis {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
 }
 
 .money-cell {

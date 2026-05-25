@@ -1,6 +1,6 @@
 <template>
   <section class="list-page">
-    <form class="filter-bar list-filter-bar" @submit.prevent="$emit('search')">
+    <form class="filter-bar list-filter-bar" @submit.prevent="loadList">
       <label>
         <span>报销单号</span>
         <input v-model.trim="filters.reimbursementNo" placeholder="请输入" />
@@ -50,8 +50,8 @@
         </select>
       </label>
       <div class="filter-actions">
-        <button class="btn ghost" type="button" @click="$emit('new')">新增</button>
-        <button class="btn ghost" type="button" @click="$emit('reset')">清除</button>
+        <button class="btn ghost" type="button" @click="newBill">新增</button>
+        <button class="btn ghost" type="button" @click="resetFilters">清除</button>
         <button class="btn primary" type="submit">搜索</button>
       </div>
     </form>
@@ -83,19 +83,26 @@
             <td class="index-col">{{ (page.pageNo - 1) * page.pageSize + index + 1 }}</td>
             <td>
               <div class="row-actions action-cell">
-                <button title="查看" @click="$emit('view', row)"><FileText :size="14" /></button>
-                <button title="编辑" :disabled="!canModify(row)" @click="$emit('edit', row)"><Pencil :size="14" /></button>
-                <button title="删除" :disabled="!canModify(row)" @click="$emit('delete', row)"><Trash2 :size="14" /></button>
+                <button title="查看" @click="viewDetail(row)"><FileText :size="14" /></button>
+                <button title="编辑" :disabled="!canModify(row)" @click="editDetail(row)"><Pencil :size="14" /></button>
+                <div class="more-actions">
+                  <button title="更多" class="more-btn" @mouseenter="showMoreMenu(row.reimbursementNo)" @mouseleave="hideMoreMenu()"><MoreHorizontal :size="14" /></button>
+                  <div v-show="moreMenuOpen === row.reimbursementNo" class="more-menu" @mouseenter="showMoreMenu(row.reimbursementNo)" @mouseleave="hideMoreMenu()">
+                    <button @click="confirmDelete(row)">删除</button>
+                    <button @click="manualPush(row)">手工推送</button>
+                    <button @click="copyBill(row)">复制</button>
+                  </div>
+                </div>
               </div>
             </td>
-            <td><button class="link" @click="$emit('view', row)">{{ row.reimbursementNo }}</button></td>
+            <td><button class="link" @click="viewDetail(row)">{{ row.reimbursementNo }}</button></td>
             <td><span class="status-link">{{ row.statusName }}</span></td>
             <td>{{ row.billTypeName }}</td>
             <td>{{ row.reimburserName }}[{{ row.reimburserNo }}]</td>
             <td>[{{ row.reimDepartmentNo }}]{{ row.reimDepartmentName }}</td>
             <td class="ellipsis">{{ row.reimCompanyName }}</td>
             <td>{{ row.businessTypeName }}</td>
-            <td><button class="link ellipsis inline-link" @click="$emit('view', row)">{{ row.title }}</button></td>
+            <td><button class="link ellipsis inline-link" @click="viewDetail(row)">{{ row.title }}</button></td>
             <td class="ellipsis">{{ row.reason }}</td>
             <td class="money-cell">{{ formatMoney(row.allowanceAmount) }}</td>
             <td>{{ formatDate(row.createdAt) }}</td>
@@ -105,24 +112,24 @@
     </div>
 
     <footer class="pager">
-      <span>共{{ total }}条</span>
+      <span>共{{ total || 0 }}条</span>
       <select :value="page.pageSize" @change="changePageSize($event.target.value)">
         <option v-for="size in pageSizes" :key="size" :value="size">{{ size }}条/页</option>
       </select>
-      <button :disabled="page.pageNo <= 1" @click="changePage(page.pageNo - 1)"><ChevronLeft :size="15" /></button>
+      <button :disabled="(Number(page.pageNo) || 1) <= 1" @click="changePage(page.pageNo - 1)"><ChevronLeft :size="15" /></button>
       <template v-for="item in pagerItems" :key="item.key">
         <span v-if="item.ellipsis" class="pager-ellipsis">...</span>
         <button
           v-else
           class="page-number"
-          :class="{ active: item.page === page.pageNo }"
+          :class="{ active: item.page === (Number(page.pageNo) || 1) }"
           type="button"
           @click="changePage(item.page)"
         >
           {{ item.page }}
         </button>
       </template>
-      <button :disabled="page.pageNo >= totalPages" @click="changePage(page.pageNo + 1)"><ChevronRight :size="15" /></button>
+      <button :disabled="(Number(page.pageNo) || 1) >= totalPages" @click="changePage(page.pageNo + 1)"><ChevronRight :size="15" /></button>
       <span>前往</span>
       <input
         v-model.number="jumpPage"
@@ -139,35 +146,53 @@
 </template>
 
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import {
   ChevronLeft,
   ChevronRight,
   FileText,
+  MoreHorizontal,
   Pencil,
   SlidersHorizontal,
   Trash2
 } from 'lucide-vue-next'
 import { formatDate, formatMoney } from '../utils/formatters'
 import { canEditReimbursement } from '../utils/reimbursement'
+import { useMasterData } from '../stores/masterData'
+import { useFeedback } from '../composables/useFeedback'
+import { deleteReimbursement, listReimbursements, submitReimbursement } from '../api/travelReimbursements'
 
-const props = defineProps({
-  rows: { type: Array, required: true },
-  loading: { type: Boolean, required: true },
-  filters: { type: Object, required: true },
-  options: { type: Object, required: true },
-  page: { type: Object, required: true },
-  total: { type: Number, required: true }
+const router = useRouter()
+const { options } = useMasterData()
+const { showToast, confirmDialog } = useFeedback()
+
+const loading = ref(false)
+const rows = ref([])
+const total = ref(0)
+const page = reactive({ pageNo: 1, pageSize: 10 })
+const filters = reactive({
+  reimbursementNo: '',
+  title: '',
+  reason: '',
+  reimCompanyId: '',
+  reimDepartmentId: '',
+  reimburserId: '',
+  businessTypeId: ''
 })
 
-const emit = defineEmits(['search', 'reset', 'view', 'edit', 'delete', 'new', 'page', 'pageSize'])
-
 const pageSizes = [10, 20, 50]
-const jumpPage = ref(props.page.pageNo)
+const jumpPage = ref(Number(page.pageNo))
+const moreMenuOpen = ref(null)
+const moreMenuTimer = ref(null)
 
-const totalPages = computed(() => Math.max(1, Math.ceil(Number(props.total || 0) / Number(props.page.pageSize || 10))))
+const totalPages = computed(() => {
+  const totalNum = Number(total.value) || 0
+  const pageSizeNum = Number(page.pageSize) || 10
+  return Math.max(1, Math.ceil(totalNum / pageSizeNum))
+})
 const pagerItems = computed(() => {
-  const current = Number(props.page.pageNo || 1)
+  const current = Math.max(1, Math.min(Number(page.pageNo) || 1, totalPages.value))
   const last = totalPages.value
   const pages = new Set([1, last])
 
@@ -188,31 +213,153 @@ const pagerItems = computed(() => {
 })
 
 watch(
-  () => props.page.pageNo,
+  () => page.pageNo,
   (value) => {
-    jumpPage.value = value
+    jumpPage.value = Number(value) || 1
   }
 )
 
 const leafBusinessTypes = computed(() =>
-  (props.options.businessTypes || []).filter((item) => !item.thereSubordinateNode || item.thereSubordinateNode === '0')
+  (options.businessTypes || []).filter((item) => !item.thereSubordinateNode || item.thereSubordinateNode === '0')
 )
+
+async function loadList() {
+  loading.value = true
+  const params = new URLSearchParams({
+    pageNo: String(Math.max(1, Number(page.pageNo) || 1)),
+    pageSize: String(Math.max(1, Number(page.pageSize) || 10))
+  })
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value) params.set(key, value)
+  })
+  try {
+    const data = await listReimbursements(params)
+    rows.value = data.records || []
+    total.value = Number(data.total) || 0
+    const maxPage = Math.max(1, Math.ceil(total.value / (Number(page.pageSize) || 10)))
+    const currentPage = Number(page.pageNo) || 1
+    if (currentPage > maxPage) {
+      page.pageNo = maxPage
+      await loadList()
+    }
+  } catch (error) {
+    showToast(`列表加载失败：${error.message}`, 'error')
+  } finally {
+    loading.value = false
+  }
+}
+
+function resetFilters() {
+  Object.keys(filters).forEach((key) => {
+    filters[key] = ''
+  })
+  page.pageNo = 1
+  loadList()
+}
+
+function viewDetail(row) {
+  router.push({ name: 'reimbursement-detail', params: { id: row.reimbursementId } })
+}
+
+function editDetail(row) {
+  if (!canEditReimbursement(row)) {
+    showToast('只有草稿状态的报销单可以编辑', 'warning')
+    return
+  }
+  router.push({ name: 'reimbursement-edit', params: { id: row.reimbursementId } })
+}
+
+function newBill() {
+  router.push({ name: 'reimbursement-create' })
+}
+
+function showMoreMenu(reimbursementNo) {
+  if (moreMenuTimer.value) {
+    clearTimeout(moreMenuTimer.value)
+    moreMenuTimer.value = null
+  }
+  moreMenuOpen.value = reimbursementNo
+}
+
+function hideMoreMenu() {
+  moreMenuTimer.value = setTimeout(() => {
+    moreMenuOpen.value = null
+    moreMenuTimer.value = null
+  }, 200)
+}
+
+function confirmDelete(row) {
+  if (!canEditReimbursement(row)) {
+    showToast('只有草稿状态的报销单可以删除', 'warning')
+    moreMenuOpen.value = null
+    return
+  }
+  deleteBill(row)
+}
+
+async function deleteBill(row) {
+  if (!(await confirmDialog('确认删除？'))) {
+    moreMenuOpen.value = null
+    return
+  }
+  await deleteReimbursement(row.reimbursementId)
+  showToast('删除成功', 'success')
+  moreMenuOpen.value = null
+  await loadList()
+}
+
+async function manualPush(row) {
+  if (!(await confirmDialog('确认手工推送该报销单并转为已完成状态？'))) {
+    moreMenuOpen.value = null
+    return
+  }
+  try {
+    await submitReimbursement(row.reimbursementId)
+    showToast(`报销单 ${row.reimbursementNo} 已转为已完成状态`, 'success')
+    await loadList()
+  } catch (error) {
+    showToast(`手工推送失败：${error.message}`, 'error')
+  } finally {
+    moreMenuOpen.value = null
+  }
+}
+
+async function copyBill(row) {
+  try {
+    await navigator.clipboard.writeText(row.reimbursementNo)
+    showToast(`已复制单号：${row.reimbursementNo}`, 'success')
+  } catch (error) {
+    showToast('复制失败', 'error')
+  } finally {
+    moreMenuOpen.value = null
+  }
+}
 
 function canModify(row) {
   return canEditReimbursement(row)
 }
 
 function changePage(nextPage) {
-  const pageNo = Math.min(Math.max(Number(nextPage || 1), 1), totalPages.value)
-  if (pageNo !== props.page.pageNo) emit('page', pageNo)
+  const nextPageNum = Number(nextPage) || 1
+  const pageNo = Math.min(Math.max(nextPageNum, 1), totalPages.value)
+  if (pageNo !== (Number(page.pageNo) || 1)) {
+    page.pageNo = pageNo
+    loadList()
+  }
 }
 
 function changePageSize(size) {
-  emit('pageSize', Number(size))
+  page.pageSize = Math.max(1, Number(size) || 10)
+  page.pageNo = 1
+  loadList()
 }
 
 function jumpToPage() {
   changePage(jumpPage.value)
 }
+
+onMounted(() => {
+  loadList()
+})
 
 </script>

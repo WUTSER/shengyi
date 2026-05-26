@@ -63,7 +63,8 @@ CREATE TABLE IF NOT EXISTS travel_trip (
     departure_date DATE NOT NULL COMMENT '出发日期',
     arrival_date DATE NOT NULL COMMENT '到达日期',
     description VARCHAR(500) NOT NULL COMMENT '行程说明',
-    CONSTRAINT fk_trip_reimbursement FOREIGN KEY (reimbursement_id) REFERENCES travel_reimbursement(reimbursement_id)
+    CONSTRAINT fk_trip_reimbursement FOREIGN KEY (reimbursement_id) REFERENCES travel_reimbursement(reimbursement_id),
+    CONSTRAINT chk_trip_arrival_date CHECK (arrival_date >= departure_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='补录行程';
 
 CREATE TABLE IF NOT EXISTS travel_allowance (
